@@ -70,7 +70,20 @@ Ingresa a esta ruta local o la que se definio en las propiedades (por defecto)
 
 ### Pre-requisitos   
 
-Empecemos compilando el proyecto de Spring Boot para generar el Jar.  Este comando compilara el proyecto y generara un archivo JAR en el directorio target del proyecto.
+**cambiar las properties en:** 
+
+    /src/main/resources/application.properties
+
+*Por las siguientes, estan variables de entorno seran asignadas en el docker compose mas adelante:*
+
+    spring.datasource.url=${DATABASE_URL}
+    spring.datasource.username=${DATABASE_USERNAME}
+    spring.datasource.password=${DATABASE_PASSWORD}
+    spring.jpa.properties.hibernate.show_sql=true
+    spring.jpa.hibernate.ddl-auto=update
+    server.port=8090
+
+*Ahora si, empecemos compilando el proyecto de Spring Boot para generar el Jar.  Este comando compilara el proyecto y generara un archivo JAR en el directorio target del proyecto.*
 
 **utilizando Maven, puedes ejecutar el siguiente comando en la raíz de tu proyecto:**
 
@@ -86,13 +99,13 @@ Empecemos compilando el proyecto de Spring Boot para generar el Jar.  Este coman
 
 ### Creando Dockerfile
 
-Ahora que todo ha Marchado bien empecemos con docker: 
-
-En el directorio raiz encontraras un archivo llamado Dockerfile este lo podras configurar segun tus necesidades
+En este punto encontraras dos archivos, el directorio raiz:
 
     apiRestSpringBootUsuarios\Dockerfile
 
-con el siguiente codigo explicado linea a linea: 
+    apiRestSpringBootUsuarios\docker-compose.yml
+
+*Dentro del archivo llamado **Dockerfile** encontraras el siguiente codigo y este lo podras configurar segun tus necesidades:*
 
     # Usa una imagen base de Java
     FROM openjdk:17-jdk-alpine
@@ -104,3 +117,44 @@ con el siguiente codigo explicado linea a linea:
     EXPOSE 8090
     # Comando para ejecutar la aplicación cuando se inicie el contenedor
     CMD ["java", "-jar", "app.jar", "java-app.jar"]
+
+*Dentro del archivo llamado **docker-compose.yml** encontraras el siguiente codigo y este lo podras configurar segun tus necesidades:*
+
+    version: '3.9'
+
+    services:
+    java_app:
+        container_name: java_app
+        image: devops:1.0.0
+        build: .
+        ports:
+        - "0:8090"
+        environment:
+        - DATABASE_URL=jdbc:mysql://java_db:3306/apiusuario
+        - DATABASE_USERNAME=root # Cambia esto al usuario que corresponda
+        - DATABASE_PASSWORD=secretmysql # Cambia esto a tu contraseña de MySQL
+        depends_on:
+        - java_db
+        networks:
+        - default
+
+    java_db:
+        container_name: java_db
+        image: mysql:latest
+        environment:
+        - MYSQL_DATABASE=apiusuario
+        - MYSQL_ROOT_PASSWORD=secretmysql # Cambia esto a tu contraseña de root de MySQL
+        ports:
+        - '3306:3306'
+        networks:
+        - default
+
+*Lo siguiente sera construir la imagen del servicio que definimos como **java_app** con el siguiente codigo:*
+
+    docker-compose build java_app  
+
+*Por ultimo sera crear y ejecutar el contenedor basados en las definiciones especificadas en el archivo docker-compose.yml*
+
+    docker compose u
+
+**Solo queda ingresar al puerto de la api y listo!**

@@ -6,13 +6,15 @@ services:
     image: devops:1.0.0
     build: .
     ports:
-      - 8090:8090
+      - "0:8090"
     environment:
       - DATABASE_URL=jdbc:mysql://java_db:3306/apiusuario
       - DATABASE_USERNAME=root # Cambia esto al usuario que corresponda
       - DATABASE_PASSWORD=secretmysql # Cambia esto a tu contraseña de MySQL
     depends_on:
       - java_db
+    networks:
+      - default
 
   java_db:
     container_name: java_db
@@ -22,3 +24,5 @@ services:
       - MYSQL_ROOT_PASSWORD=secretmysql # Cambia esto a tu contraseña de root de MySQL
     ports:
       - '3306:3306'
+    networks:
+      - default
